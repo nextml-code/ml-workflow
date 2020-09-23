@@ -1,5 +1,5 @@
-Welcome to ml-workflows's documentation!
-========================================
+Welcome to ml-workflow's documentation!
+=======================================
 
 ML workflow contains our process of bringing a project to fruition as
 efficiently as possible. This is subject to change as we iterate and improve.
