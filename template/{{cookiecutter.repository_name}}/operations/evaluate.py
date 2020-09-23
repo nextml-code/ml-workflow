@@ -4,6 +4,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 import os
+from pathlib import Path
+import json
 from functools import partial
 import numpy as np
 import random
@@ -17,7 +19,6 @@ from ignite.contrib.handlers.tensorboard_logger import (
 )
 import logging
 import workflow
-from workflow import json
 from workflow.functional import starcompose
 from workflow.torch import set_seeds
 from workflow.ignite import worker_init, evaluator
@@ -62,7 +63,6 @@ def evaluate(config):
             loss=loss,
         )
 
-
     evaluate_data_loaders = {
         f'evaluate_{name}': datastream.data_loader(
             batch_size=config['eval_batch_size'],
@@ -76,7 +76,9 @@ def evaluate(config):
 
     for desciption, data_loader in evaluate_data_loaders.items():
         engine = evaluator(
-            evaluate_batch, desciption, metrics.evaluate_metrics(), tensorboard_logger
+            evaluate_batch, desciption,
+            metrics.evaluate_metrics(),
+            tensorboard_logger,
         )
         engine.run(data=data_loader)
 
@@ -99,7 +101,6 @@ if __name__ == '__main__':
         run_id=os.getenv('RUN_ID'),
     )
 
-    json.write(config, 'config.json')
+    Path('config.json').write_text(json.dumps(config))
 
     evaluate(config)
-

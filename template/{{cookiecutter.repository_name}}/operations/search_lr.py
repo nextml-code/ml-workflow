@@ -1,9 +1,10 @@
 import argparse
 import os
+from pathlib import Path
+import json
 import logging
 from functools import partial
 import torch
-from workflow import json
 from workflow.functional import starcompose
 from workflow.ignite import worker_init
 from workflow.ignite.handlers.learning_rate import (
@@ -43,6 +44,6 @@ if __name__ == '__main__':
         n_batches_per_epoch=config['n_batches'],
     )
 
-    json.write(config, 'config.json')
+    Path('config.json').write_text(json.dumps(config))
 
     train(config)

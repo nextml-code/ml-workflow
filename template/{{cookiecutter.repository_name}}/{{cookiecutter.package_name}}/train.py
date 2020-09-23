@@ -1,5 +1,5 @@
-import os
 from functools import partial
+from pathlib import Path
 import numpy as np
 import random
 import argparse
@@ -8,7 +8,6 @@ import torch.nn.functional as F
 import ignite
 import logging
 import workflow
-from workflow import json
 from workflow.functional import starcompose
 from workflow.torch import set_seeds
 from workflow.ignite import worker_init
@@ -35,7 +34,7 @@ def train(config):
 
     train_state = dict(model=model, optimizer=optimizer)
 
-    if os.path.exists('model'):
+    if Path('model').exists():
         print('Loading model checkpoint')
         workflow.ignite.handlers.ModelCheckpoint.load(
             train_state, 'model/checkpoints', device
@@ -108,7 +107,7 @@ def train(config):
         tensorboard_logger,
         config,
     ).attach(trainer, evaluators)
-    
+
     tensorboard_logger.attach(
         trainer,
         log_examples('train', trainer),
