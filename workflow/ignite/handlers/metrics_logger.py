@@ -1,7 +1,7 @@
 from tqdm import tqdm
 from ignite.engine import Events
 
-from workflow.ignite.is_float import is_float
+from workflow.torch.is_float import is_float
 
 
 class MetricsLogger:

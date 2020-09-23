@@ -3,6 +3,28 @@ import torch.nn as nn
 
 
 class ModuleCompose(nn.Module):
+    '''
+    ``ModuleCompose`` behaves like an extended ``torch.nn.Sequential`` that
+    also allows:
+
+    - vanilla functions
+    - expands tuples to the next function's arguments
+    - specify a module and a wrapping function as seen in the example below
+
+    .. code-block:: python
+
+        from torch import nn
+        from workflow.torch import ModuleCompose
+
+        ModuleCompose(
+            nn.Conv2d(3, 32),
+            nn.Conv2d(32, 16),
+            (nn.Conv2d(16, 16), lambda conv, x: conv(x) + x),
+            lambda x: (x, x * 2),
+            lambda x, x2: x + x2,
+        )
+
+    '''
     def __init__(self, *modules_and_functions):
         super().__init__()
         self.modules_and_functions = modules_and_functions

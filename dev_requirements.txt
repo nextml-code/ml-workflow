@@ -4,3 +4,5 @@ setuptools
 wheel
 twine
 virtualenv
+rstcheck
+sphinx
