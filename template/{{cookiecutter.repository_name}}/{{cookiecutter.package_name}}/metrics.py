@@ -12,7 +12,7 @@ def train_metrics():
 
 
 def progress_metrics():
-    return  dict(
+    return dict(
         batch_loss=ignite.metrics.RunningAverage(
             output_transform=lambda output: output['loss'],
             epoch_bound=False,
