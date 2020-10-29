@@ -39,32 +39,6 @@ def train(config):
         )
         workflow.torch.set_learning_rate(optimizer, config['learning_rate'])
 
-    # 
-    def process_batch(examples):
-        predictions = model.predictions(
-            architecture.FeatureBatch.from_examples(examples)
-        )
-        loss = predictions.loss(examples)
-        return predictions, loss
-
-    @workflow.torch.decorators.train(model, optimizer)
-    def train_batch(examples):
-        predictions, loss = process_batch(examples)
-        loss.backward()
-        return dict(
-            examples=examples,
-            predictions=predictions.cpu().detach(),
-            loss=loss,
-        )
-
-    @workflow.torch.decorators.evaluate(model)
-    def evaluate_batch(examples):
-        predictions, loss = process_batch(examples)
-        return dict(
-            examples=examples,
-            predictions=predictions.cpu().detach(),
-            loss=loss,
-        )
 
     evaluate_data_loaders = {
         f'evaluate_{name}': datastream.data_loader(
@@ -91,15 +65,30 @@ def train(config):
 
     for epoch in tqdm(range(config['max_epochs'])):
         for examples in tqdm(gradient_data_loader):
-            output = train_batch(examples)
-            metrics.gradient_metrics(output, tensorboard_logger)
+            with workflow.train(model, optimizer):
+                predictions = model.predictions(
+                    architecture.FeatureBatch.from_examples(examples)
+                )
+                loss = predictions.loss(examples)
+                loss.backward()
+
+            metrics.gradient_metrics(
+                examples, predictions, loss, tensorboard_logger
+            )
             # optional: schedule learning rate
 
         for name, data_loader in evaluate_data_loaders:
             for examples in tqdm(data_loader):
-                output = evaluate_batch(examples)
+                with workflow.eval(model):
+                    predictions = model.predictions(
+                        architecture.FeatureBatch.from_examples(examples)
+                    )
+                    loss = predictions.loss(examples)
+
                 # TODO: metrics need state?
-                metrics.evaluate_metrics(output, tensorboard_logger)
+                # metrics.evaluate_metrics(
+                #     examples, predictions, loss, tensorboard_logger
+                # )
 
         improved, out_of_patience = early_stopping.score(output)
         if improved:
