@@ -87,21 +87,31 @@ def train(config):
     )
 
     tensorboard_logger = torch.utils.tensorboard.SummaryWriter()
-    early_stopping = workflow.EarlyStopping(...)
+    gradient_metrics = metrics.gradient_metrics(tensorboard_logger)
+    early_stopping = workflow.EarlyStopping(
+        tensorboard_logger,
+        lambda summaries: summaries['early_stopping']['accuracy'],
+    )
 
-    for epoch in tqdm(range(config['max_epochs'])):
-        for examples in tqdm(gradient_data_loader):
+    for epoch in range(config['max_epochs']):
+        for examples in workflow.progress(
+            gradient_data_loader, gradient_metrics[['loss', 'accuracy']]
+        ):
             output = train_batch(examples)
-            metrics.gradient_metrics(output, tensorboard_logger)
+            gradient_metrics.update_(output)
+            gradient_metrics.log()
             # optional: schedule learning rate
 
         for name, data_loader in evaluate_data_loaders:
+
+            metrics = metrics.evaluate_metrics(name, tensorboard_logger)
             for examples in tqdm(data_loader):
                 output = evaluate_batch(examples)
-                # TODO: metrics need state?
-                metrics.evaluate_metrics(output, tensorboard_logger)
+                metrics.update_(output)
 
-        improved, out_of_patience = early_stopping.score(output)
+            metrics.log()
+
+        improved, out_of_patience = early_stopping.score_(output)
         if improved:
             torch.save(train_state, 'model_checkpoint.pt')
         elif out_of_patience(output):
