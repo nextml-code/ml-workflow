@@ -1,5 +1,6 @@
 from tqdm import tqdm
 from ignite.engine import Events
+import pprint
 
 from workflow.torch.is_float import is_float
 
@@ -27,7 +28,7 @@ class MetricsLogger:
                     padding = ' ' * (target_len - len(metric_name))
                     if hasattr(value, '__len__'):
                         tqdm.write(f'  {metric_name}:')
-                        tqdm.write(str(value))
+                        tqdm.write(pprint.pformat(value))
                     elif is_float(value):
                         if abs(value) > 1e-4 or value == 0:
                             tqdm.write(
