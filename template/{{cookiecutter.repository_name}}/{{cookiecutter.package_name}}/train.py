@@ -39,33 +39,6 @@ def train(config):
         )
         workflow.torch.set_learning_rate(optimizer, config['learning_rate'])
 
-    # 
-    def process_batch(examples):
-        predictions = model.predictions(
-            architecture.FeatureBatch.from_examples(examples)
-        )
-        loss = predictions.loss(examples)
-        return predictions, loss
-
-    @workflow.torch.decorators.train(model, optimizer)
-    def train_batch(examples):
-        predictions, loss = process_batch(examples)
-        loss.backward()
-        return dict(
-            examples=examples,
-            predictions=predictions.cpu().detach(),
-            loss=loss,
-        )
-
-    @workflow.torch.decorators.evaluate(model)
-    def evaluate_batch(examples):
-        predictions, loss = process_batch(examples)
-        return dict(
-            examples=examples,
-            predictions=predictions.cpu().detach(),
-            loss=loss,
-        )
-
     evaluate_data_loaders = {
         f'evaluate_{name}': datastream.data_loader(
             batch_size=config['eval_batch_size'],
@@ -87,32 +60,48 @@ def train(config):
     )
 
     tensorboard_logger = torch.utils.tensorboard.SummaryWriter()
-    gradient_metrics = metrics.gradient_metrics(tensorboard_logger)
-    early_stopping = workflow.EarlyStopping(
-        tensorboard_logger,
-        lambda summaries: summaries['early_stopping']['accuracy'],
-    )
+    early_stopping = workflow.EarlyStopping()
+    # gradient_metrics = metrics.gradient_metrics()
 
-    for epoch in range(config['max_epochs']):
-        for examples in workflow.progress(
-            gradient_data_loader, gradient_metrics[['loss', 'accuracy']]
-        ):
-            output = train_batch(examples)
-            gradient_metrics.update_(output)
-            gradient_metrics.log()
-            # optional: schedule learning rate
+    for epoch in tqdm(range(config['max_epochs'])):
 
-        for name, data_loader in evaluate_data_loaders:
+        with workflow.torch.module_train(model):
+            for examples in workflow.ProgressBar(
+                gradient_data_loader
+                # gradient_data_loader, metrics=gradient_metrics[['loss']]
+            ):
+                predictions = model.predictions(
+                    architecture.FeatureBatch.from_examples(examples)
+                )
+                loss = predictions.loss(examples)
+                loss.backward()
+                optimizer.step()
+                optimizer.zero_grad()
 
-            metrics = metrics.evaluate_metrics(name, tensorboard_logger)
-            for examples in tqdm(data_loader):
-                output = evaluate_batch(examples)
-                metrics.update_(output)
+                # gradient_metrics = gradient_metrics.update(
+                #     examples, predictions, loss
+                # )
+                # gradient_metrics.log_()
 
-            metrics.log()
+                # optional: schedule learning rate
 
-        improved, out_of_patience = early_stopping.score_(output)
-        if improved:
+        with workflow.torch.module_eval(model), torch.no_grad:
+            for name, data_loader in evaluate_data_loaders:
+                # evaluate_metrics = metrics.evaluate_metrics()
+
+                for examples in tqdm(data_loader):
+                    predictions = model.predictions(
+                        architecture.FeatureBatch.from_examples(examples)
+                    )
+                    loss = predictions.loss(examples)
+
+                #     evaluate_metrics = evaluate_metrics.update(
+                #         examples, predictions, loss
+                #     )
+                # evaluate_metrics.log_()
+
+        early_stopping = early_stopping.score(tensorboard_logger)
+        if early_stopping.scores_since_improvement == 0:
             torch.save(train_state, 'model_checkpoint.pt')
-        elif out_of_patience(output):
+        elif early_stopping.scores_since_improvement > patience:
             break
