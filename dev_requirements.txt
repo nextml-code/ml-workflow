@@ -1,8 +1,0 @@
-flake8
-pytest
-setuptools
-wheel
-twine
-virtualenv
-rstcheck
-sphinx

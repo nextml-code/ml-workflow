@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "workflow"
+version = "0.0.0"
+description = "Pytorch project template and related tools"
+authors = ["Aiwizo"]
+license = "Apache 2"
+include = ["workflow/template/*"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+numpy = "^1.19.4"
+opencv-python = "^4.4.0"
+pytorch-datastream = "^0.3.8"
+torch = "1.6.0"
+tqdm = "^4.51.0"
+cookiecutter = "^1.7.2"
+tensorboard = "^2.3.0"
+imgaug = "^0.4.0"
+
+[tool.poetry.dev-dependencies]
+flake8 = "^3.8.4"
+pytest = "^6.1.2"
+rstcheck = "^3.3.1"
+Sphinx = "^3.3.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
