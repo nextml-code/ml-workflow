@@ -31,7 +31,7 @@ class ModelScore:
         self.evaluator_metrics = evaluator_metrics
         self.tensorboard_logger = tensorboard_logger
         self.config = config
-        self.n_saved = n_saved,
+        self.n_saved = n_saved
 
     def attach(self, trainer, evaluators):
         def _model_score_function(*args, **kwargs):
@@ -66,7 +66,7 @@ class ModelScore:
                 BestModelTrigger.Event,
             )
 
-        ModelCheckpoint(_model_score_function, n_saved=n_saved).attach(
+        ModelCheckpoint(_model_score_function, n_saved=self.n_saved).attach(
             trainer, self.checkpoint_state
         )
 
