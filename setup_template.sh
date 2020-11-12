@@ -17,4 +17,5 @@ test
 test project
 y" | python -m workflow.setup_project
 pip install -r requirements.txt
+pip install -e ..
 deactivate
