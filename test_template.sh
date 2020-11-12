@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 set -o errexit -o nounset -o pipefail -o xtrace
 
+rm dist/workflow-0.0.0-py3-none-any.whl
+poetry build
 cd test_template
+poetry remove workflow
+poetry install --remove-untracked
+poetry add ../dist/workflow-0.0.0-py3-none-any.whl
 shopt -s extglob 
 rm -rf .github
 rm -rf !(pyproject.toml)

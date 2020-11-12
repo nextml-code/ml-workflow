@@ -6,15 +6,14 @@ from cookiecutter.exceptions import RepositoryNotFound
 
 
 if __name__ == '__main__':
+    print(__file__ + '/template')
     try:
         repository_path = cookiecutter(
-            '/'.join(__file__.split('/')[:-5]) + '/workflow/template',
+            str(Path(__file__).parent / 'template')
         )
-    except RepositoryNotFound:
-        # Probably installed with the -e flag
-        repository_path = cookiecutter(
-            '/'.join(__file__.split('/')[:-2]) + '/template',
-        )
+    except RepositoryNotFound as exception:
+        print('__file__:', __file__)
+        raise exception
     
     repository_path = Path(repository_path)
 
