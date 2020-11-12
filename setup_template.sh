@@ -9,7 +9,7 @@ cd test_template
 virtualenv venv -p "python${VERSION}"
 source venv/bin/activate
 cd ..
-pip install -e .
+pip install .
 cd test_template
 echo "test
 test
@@ -17,5 +17,5 @@ test
 test project
 y" | python -m workflow.setup_project
 pip install -r requirements.txt
-pip install -e ..
+pip install ..
 deactivate
