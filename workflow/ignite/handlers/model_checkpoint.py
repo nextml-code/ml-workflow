@@ -9,12 +9,12 @@ class ModelCheckpoint:
     dirname = 'checkpoints'
     filename_prefix = 'model'
 
-    def __init__(self, model_score_function=None):
+    def __init__(self, model_score_function=None, n_saved=1):
         self.model_checkpoint = ignite.handlers.ModelCheckpoint(
             dirname=self.dirname,
             filename_prefix=self.filename_prefix,
             score_function=model_score_function,
-            n_saved=1,
+            n_saved=n_saved,
             require_empty=False,
         )
 

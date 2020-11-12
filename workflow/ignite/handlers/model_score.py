@@ -16,6 +16,7 @@ class ModelScore:
         evaluator_metrics,
         tensorboard_logger,
         config,
+        n_saved=1,
     ):
         '''
         Model score brings together several handlers related to model score.
@@ -30,6 +31,7 @@ class ModelScore:
         self.evaluator_metrics = evaluator_metrics
         self.tensorboard_logger = tensorboard_logger
         self.config = config
+        self.n_saved = n_saved,
 
     def attach(self, trainer, evaluators):
         def _model_score_function(*args, **kwargs):
@@ -64,7 +66,7 @@ class ModelScore:
                 BestModelTrigger.Event,
             )
 
-        ModelCheckpoint(_model_score_function).attach(
+        ModelCheckpoint(_model_score_function, n_saved=n_saved).attach(
             trainer, self.checkpoint_state
         )
 
